@@ -19,7 +19,7 @@ import types
 ### consitent with those in rebound.h
         
 INTEGRATORS = {"ias15": 0, "whfast": 1, "sei": 2, "leapfrog": 4, "none": 7, "janus": 8, "mercurius": 9, "saba": 10, "eos": 11, "bs": 12, "whfast512":21, "trace":25}
-BOUNDARIES = {"none": 0, "open": 1, "periodic": 2, "shear": 3}
+BOUNDARIES = {"none": 0, "open": 1, "periodic": 2, "shear": 3, "shear_e": 4}
 GRAVITIES = {"none": 0, "basic": 1, "compensated": 2, "tree": 3, "mercurius": 4, "jacobi": 5, "trace": 6}
 COLLISIONS = {"none": 0, "direct": 1, "tree": 2, "line": 4, "linetree": 5}
 # Format: Majorerror, id, message
@@ -1228,6 +1228,13 @@ class Simulation(Structure):
         """
         clibrebound.reb_simulation_angular_momentum.restype = Vec3dBasic
         return Vec3d(clibrebound.reb_simulation_angular_momentum(byref(self)))
+    
+    def ias15_timescale(self):
+        """
+        Returns the gravitational timescale in code units. See Pham, Rein, Spiegel 2023 for details. 
+        """
+        clibrebound.reb_integrator_ias15_timescale.restype = c_double
+        return clibrebound.reb_integrator_ias15_timescale(byref(self))
 
     def configure_box(self, boxsize, N_root_x=1, N_root_y=1, N_root_z=1):
         """
@@ -1531,6 +1538,8 @@ Simulation._fields_ = [
                 ("python_unit_l",c_uint32),
                 ("python_unit_m",c_uint32),
                 ("boxsize", Vec3dBasic),
+                ("Lx_t", c_double),
+                ("Rx_t", c_double),
                 ("boxsize_max", c_double),
                 ("root_size", c_double),
                 ("N_root", c_int),
@@ -1543,9 +1552,9 @@ Simulation._fields_ = [
                 ("collision_resolve_keep_sorted", c_int),
                 ("collisions", c_void_p),
                 ("N_allocated_collisions", c_int),
+                ("collisions_N", c_uint),
                 ("minimum_collision_velocity", c_double),
                 ("collisions_plog", c_double),
-                ("max_radius", c_double*2),
                 ("collisions_log_n", c_int64),
                 ("_calculate_megno", c_int),
                 ("_megno_Ys", c_double),
@@ -1554,6 +1563,7 @@ Simulation._fields_ = [
                 ("_megno_var_t", c_double),
                 ("_megno_mean_t", c_double),
                 ("_megno_mean_Y", c_double),
+                ("_megno_initial_t", c_double),
                 ("_megno_n", c_int64),
                 ("rand_seed",c_uint),
                 ("simulationarchive_version", c_int),
